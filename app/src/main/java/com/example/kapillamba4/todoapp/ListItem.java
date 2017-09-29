@@ -7,10 +7,20 @@ package com.example.kapillamba4.todoapp;
 public class ListItem {
     private String title;
     private String content;
+    private long id;
 
-    public ListItem(String title, String content) {
+    public ListItem(String title, String content, long id) {
         this.title = title;
         this.content = content;
+        this.id = id;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getTitle() {

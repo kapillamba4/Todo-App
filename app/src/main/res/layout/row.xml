@@ -17,14 +17,19 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="2"
-            android:inputType="text|textMultiLine" />
+            android:inputType="text|textMultiLine"
+            android:textSize="22sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/content"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="2"
-            android:inputType="text|textMultiLine" />
+            android:ellipsize="end"
+            android:inputType="text|textMultiLine"
+            android:maxLines="3"
+            android:textSize="18sp" />
     </LinearLayout>
 
     <Button

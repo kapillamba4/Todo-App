@@ -1,6 +1,7 @@
 package com.example.kapillamba4.todoapp;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
