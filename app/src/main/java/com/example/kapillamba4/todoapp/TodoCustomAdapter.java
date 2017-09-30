@@ -10,6 +10,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 
 /**
@@ -42,9 +44,13 @@ public class TodoCustomAdapter extends ArrayAdapter<ListItem> {
             viewHolder = new ViewHolder();
             TextView title = convertView.findViewById(R.id.title);
             TextView content = convertView.findViewById(R.id.content);
+            TextView date = convertView.findViewById(R.id.date);
+            TextView time = convertView.findViewById(R.id.time);
             Button button = convertView.findViewById(R.id.delete_button);
             viewHolder.button = button;
             viewHolder.content = content;
+            viewHolder.date = date;
+            viewHolder.time = time;
             viewHolder.title = title;
 
             convertView.setTag(viewHolder);
@@ -61,6 +67,8 @@ public class TodoCustomAdapter extends ArrayAdapter<ListItem> {
         ListItem item = mListItems.get(position);
         viewHolder.title.setText(item.getTitle());
         viewHolder.content.setText(item.getContent());
+        viewHolder.date.setText(item.getDate());
+        viewHolder.time.setText(item.getTime());
         return convertView;
     }
 
@@ -72,6 +80,8 @@ public class TodoCustomAdapter extends ArrayAdapter<ListItem> {
 
         TextView title;
         TextView content;
+        TextView date;
+        TextView time;
         Button button;
     }
 }
