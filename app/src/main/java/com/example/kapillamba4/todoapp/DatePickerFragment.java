@@ -8,7 +8,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.DatePicker;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,7 +27,7 @@ public class DatePickerFragment extends DialogFragment implements DatePickerDial
 
         // Create a new instance of DatePickerDialog and return it
         DatePickerDialog datePickerDialog = new DatePickerDialog(getActivity(), this, year, month, day);
-        datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
+        // datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());  gives error on android 4.4.4 TODO: Investigate
         return datePickerDialog;
     }
 
@@ -40,6 +39,6 @@ public class DatePickerFragment extends DialogFragment implements DatePickerDial
         String formattedDate = sdf.format(c.getTime());
         TextView tv = MainActivity.alertView.findViewById(R.id.in_date);
         tv.setText(formattedDate);
-        Toast.makeText(getActivity(), tv.getText(), Toast.LENGTH_SHORT).show();
+        // Toast.makeText(getActivity(), tv.getText(), Toast.LENGTH_SHORT).show();
     }
 }

@@ -30,6 +30,6 @@ public class TimePickerFragment extends DialogFragment implements TimePickerDial
         String formattedTime = String.format("%02d:%02d", hourOfDay, minute);
         TextView tv = MainActivity.alertView.findViewById(R.id.in_time);
         tv.setText(formattedTime);
-        Toast.makeText(getActivity(), tv.getText(), Toast.LENGTH_SHORT).show();
+        // Toast.makeText(getActivity(), tv.getText(), Toast.LENGTH_SHORT).show();
     }
 }

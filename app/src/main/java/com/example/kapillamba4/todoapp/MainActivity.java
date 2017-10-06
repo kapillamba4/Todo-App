@@ -1,10 +1,8 @@
 package com.example.kapillamba4.todoapp;
 
-import android.app.Activity;
-import android.app.DatePickerDialog;
+
 import android.app.DialogFragment;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -12,7 +10,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.test.ActivityUnitTestCase;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -20,21 +17,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-
 import java.util.ArrayList;
-import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    public static View alertView;
+    public static View alertView, expandView;
     private ArrayList<ListItem> todos;
     private Button btnDatePicker, btnTimePicker;
     private TextView txtDate, txtTime;
-    // private int mYear, mMonth, mDay, mHour, mMinute;
     private TodoCustomAdapter adapter;
     private ListView listView;
 
@@ -77,9 +70,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                ListItem listItem = todos.get(i);
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                expandView = getLayoutInflater().inflate(R.layout.item_expanded_view, null);
+                builder.setView(expandView);
+                TextView todoTitle = expandView.findViewById(R.id.expanded_todo_title);
+                TextView todoContent = expandView.findViewById(R.id.expanded_todo_content);
+                todoTitle.setText(listItem.getTitle());
+                todoContent.setText(listItem.getContent());
+                builder.setView(expandView);
+                builder.show();
+            }
+        });
+
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, final long l) {
                 Log.i("TAG", "onItemLongClick: " + todos.size());
                 Log.i("TAG", "onItemLongClick: ");
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -92,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 title.setTextSize(20);
                 builder.setCustomTitle(title);
 
-                builder.setCancelable(false);
                 alertView = getLayoutInflater().inflate(R.layout.item_todo, null);
                 builder.setView(alertView);
 
@@ -123,7 +131,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         contentValues.put(Contract.TODO_DATE, txtDate.getText().toString());
                         contentValues.put(Contract.TODO_TIME, txtTime.getText().toString());
                         db.update(Contract.TODO_TABLE_NAME, contentValues, Contract.TODO_ID + "=?", null);
-
+                        listItem.setTitle(inputTitle.getText().toString());
+                        listItem.setContent(inputContent.getText().toString());
+                        listItem.setDate(txtDate.getText().toString());
+                        listItem.setTime(txtTime.getText().toString());
                         adapter.notifyDataSetChanged();
                         // Toast.makeText(MainActivity.this, "Add pressed", Toast.LENGTH_SHORT).show();
                     }
@@ -140,6 +151,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return true;
             }
         });
+
+
     }
 
 
