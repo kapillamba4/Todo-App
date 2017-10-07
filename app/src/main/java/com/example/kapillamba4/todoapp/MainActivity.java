@@ -1,26 +1,38 @@
 package com.example.kapillamba4.todoapp;
 
 
+import android.app.AlarmManager;
 import android.app.DialogFragment;
+import android.app.PendingIntent;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -30,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView txtDate, txtTime;
     private TodoCustomAdapter adapter;
     private ListView listView;
+    private FloatingActionButton fab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +50,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         this.setTitle("TodoList");
         listView = (ListView) findViewById(R.id.todo_list);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(this);
+
+
+        fab.setOnTouchListener(new View.OnTouchListener() {
+            float dX;
+            float dY;
+            int lastAction;
+
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        dX = view.getX() - event.getRawX();
+                        dY = view.getY() - event.getRawY();
+                        lastAction = MotionEvent.ACTION_DOWN;
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        view.setY(event.getRawY() + dY);
+                        view.setX(event.getRawX() + dX);
+                        lastAction = MotionEvent.ACTION_MOVE;
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        if (lastAction == MotionEvent.ACTION_DOWN)
+                            fab.callOnClick();
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
+            }
+        });
 
         todos = new ArrayList<>();
         TodoOpenHelper todoOpenHelper = TodoOpenHelper.getInstance(getApplicationContext());
@@ -151,10 +196,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return true;
             }
         });
-
-
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -165,7 +207,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_add_task:
+            // TODO implement share feature
+//            case R.id.share:
+//                Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
+//                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private long convertToEpoch(String date, String time) throws ParseException {
+        // TODO handle case when date is empty string or time is empty string
+        time = time + ":00.000";
+        Log.i("date", date + " " + time);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date value = sdf.parse(date + " " + time);
+        long epoch = value.getTime();
+        return epoch;
+    }
+
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        switch (id) {
+            case R.id.btn_date:
+                DialogFragment newDateFragment = new DatePickerFragment();
+                newDateFragment.show(this.getFragmentManager(), "datePicker");
+                break;
+            case R.id.btn_time:
+                DialogFragment newTimeFragment = new TimePickerFragment();
+                newTimeFragment.show(this.getFragmentManager(), "timePicker");
+                break;
+            case R.id.fab:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 TextView title = new TextView(this);
                 title.setText("Add/Edit a task");
@@ -207,7 +280,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Log.i("TAG", "onClick: " + todos.size());
                         adapter.notifyDataSetChanged();
 
-                        // Toast.makeText(MainActivity.this, "Add pressed", Toast.LENGTH_SHORT).show();
+                        long notifyTime = System.currentTimeMillis();
+                        Log.i("start", String.valueOf(notifyTime));
+                        try {
+                            notifyTime = convertToEpoch(txtDate.getText().toString(), txtTime.getText().toString());
+                            Log.i("end", String.valueOf(notifyTime));
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+
+                        AlarmManager alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                        Intent intent = new Intent(MainActivity.this, AlarmReceiver.class);
+                        intent.putExtra("title", inputTitle.getText().toString());
+                        intent.putExtra("content", inputContent.getText().toString());
+                        PendingIntent alarmIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, 0);
+                        alarmMgr.set(AlarmManager.RTC_WAKEUP, notifyTime, alarmIntent);
                     }
                 });
 
@@ -219,23 +306,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
 
                 builder.show();
-                return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onClick(View view) {
-        int id = view.getId();
-        switch (id) {
-            case R.id.btn_date:
-                DialogFragment newDateFragment = new DatePickerFragment();
-                newDateFragment.show(this.getFragmentManager(), "datePicker");
-                break;
-            case R.id.btn_time:
-                DialogFragment newTimeFragment = new TimePickerFragment();
-                newTimeFragment.show(this.getFragmentManager(), "timePicker");
                 break;
         }
     }
