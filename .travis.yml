@@ -1,23 +1,46 @@
 language: android
 
 android:
-  components:
-    - tools
-    - platform-tools
-    - tools
-    
-    - build-tools-19.1.0
-    - build-tools-26.0.1
+   components:
+   - tools
+   - platform-tools
+   - tools # Upgrade again after upgrading platform-tools.
 
-    # The SDK version used to compile your project
-    - android-26
+jdk: oraclejdk8
 
-    # Additional components
-    - extra-google-google_play_services
-    - extra-google-m2repository
-    - extra-android-m2repository
-    - addon-google_apis-google-19
+sudo: required
 
-    # System images for emulation
-    - sys-img-armeabi-v7a-android-22
-    - sys-img-armeabi-v7a-android-17
+before_install:
+  # Skip build if the commit message contains [skip travis] or [travis skip]
+   - >
+       echo "$TRAVIS_COMMIT_MESSAGE"
+       | grep -E  '\[(skip travis|travis skip)\]'
+       && echo "[skip travis] has been found, exiting."
+       && exit 0 || true
+
+before_script:
+  - echo $ANDROID_HOME
+  - mkdir -p $ANDROID_HOME/licenses
+  - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > $ANDROID_HOME/licenses/android-sdk-license
+  - echo -e "\n504667f4c0de7af1a06de9f4b1727b84351f2910" > $ANDROID_HOME/licenses/android-sdk-preview-license
+
+script:
+  - ./gradlew clean assembleDebug --no-daemon --stacktrace
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.android/build-cache
+
+notifications:
+  webhooks:
+    on_success: always
+    on_failure: always
+    on_start: never
+email: false
+
