@@ -72,6 +72,11 @@
             android:text="SELECT TIME" />
     </LinearLayout>
 
+    <!--<SeekBar-->
+    <!--android:id="@+id/priority_bar"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"/>-->
+    <!--android:background="/>-->
     <!--
             <CheckBox
                 android:id="@+id/rep_time"

@@ -33,7 +33,9 @@ public class TodoOpenHelper extends SQLiteOpenHelper {
                 Contract.TODO_TITLE + " TEXT, " +
                 Contract.TODO_DATE + " TEXT, " +
                 Contract.TODO_TIME + " TEXT, " +
-                Contract.TODO_CONTENT + " TEXT )";
+                Contract.TODO_CREATED + " INTEGER, " +
+                Contract.TODO_ACCESSED + " INTEGER, " +
+                Contract.TODO_CONTENT + " TEXT)";
 
         sqLiteDatabase.execSQL(query);
     }

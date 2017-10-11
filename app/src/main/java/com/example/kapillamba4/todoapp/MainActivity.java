@@ -11,7 +11,9 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -28,11 +30,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amitshekhar.DebugDB;
+
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.TimeZone;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -45,14 +49,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FloatingActionButton fab;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         this.setTitle("TodoList");
+//        Log.i("address", DebugDB.getAddressLog().toString());
         listView = (ListView) findViewById(R.id.todo_list);
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(this);
-
 
         fab.setOnTouchListener(new View.OnTouchListener() {
             float dX;
@@ -91,15 +95,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             cursor.moveToFirst();
         }
 
-        while (cursor.moveToNext()) {
+        do {
+            if (cursor == null || cursor.getCount() == 0) break;
             String title = cursor.getString(cursor.getColumnIndex(Contract.TODO_TITLE));
             String content = cursor.getString(cursor.getColumnIndex(Contract.TODO_CONTENT));
             String date = cursor.getString(cursor.getColumnIndex(Contract.TODO_DATE));
             String time = cursor.getString(cursor.getColumnIndex(Contract.TODO_TIME));
+            long createdEpoch = cursor.getLong(cursor.getColumnIndex(Contract.TODO_CREATED));
+            long accessedEpoch = cursor.getLong(cursor.getColumnIndex(Contract.TODO_ACCESSED));
             long id = cursor.getLong(cursor.getColumnIndex(Contract.TODO_ID));
-            ListItem listItem = new ListItem(title, content, id, date, time);
+            ListItem listItem = new ListItem(title, content, id, date, time, createdEpoch, accessedEpoch);
             todos.add(listItem);
-        }
+        } while (cursor.moveToNext());
 
         cursor.close();
         adapter = new TodoCustomAdapter(this, todos, new TodoCustomAdapter.DeleteButtonClickListener() {
@@ -118,7 +125,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                ListItem listItem = todos.get(i);
+
+                // Create Alert Dialog displaying title and expanded-content of selected list item.
+                final ListItem listItem = todos.get(i);
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 expandView = getLayoutInflater().inflate(R.layout.item_expanded_view, null);
                 builder.setView(expandView);
@@ -126,7 +135,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 TextView todoContent = expandView.findViewById(R.id.expanded_todo_content);
                 todoTitle.setText(listItem.getTitle());
                 todoContent.setText(listItem.getContent());
+                long currentEpoch = Calendar.getInstance().getTimeInMillis();
+                listItem.setAccessed(currentEpoch);
+
+                TodoOpenHelper todoOpenHelper = TodoOpenHelper.getInstance(getApplicationContext());
+                SQLiteDatabase db = todoOpenHelper.getReadableDatabase();
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(Contract.TODO_ID, listItem.getId());
+                contentValues.put(Contract.TODO_ACCESSED, String.valueOf(currentEpoch));
+                db.update(Contract.TODO_TABLE_NAME, contentValues, Contract.TODO_ID + "=?", null);
+
                 builder.setView(expandView);
+                builder.setPositiveButton("Share", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Intent sendIntent = new Intent();
+                        sendIntent.setAction(Intent.ACTION_SEND);
+                        sendIntent.setType("text/plain");
+                        sendIntent.putExtra(Intent.EXTRA_TEXT, listItem.getTitle() + "\n" + listItem.getContent());
+                        startActivity(sendIntent);
+                    }
+                });
+
+                builder.setNegativeButton("Cancel", null);
                 builder.show();
             }
         });
@@ -170,32 +201,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         TodoOpenHelper todoOpenHelper = TodoOpenHelper.getInstance(getApplicationContext());
                         SQLiteDatabase db = todoOpenHelper.getWritableDatabase();
 
+                        long currentEpoch = Calendar.getInstance().getTimeInMillis();
+                        Log.i("Edit Todo epoch", String.valueOf(currentEpoch));
                         ContentValues contentValues = new ContentValues();
+                        contentValues.put(Contract.TODO_ID, listItem.getId());
                         contentValues.put(Contract.TODO_TITLE, inputTitle.getText().toString());
                         contentValues.put(Contract.TODO_CONTENT, inputContent.getText().toString());
                         contentValues.put(Contract.TODO_DATE, txtDate.getText().toString());
                         contentValues.put(Contract.TODO_TIME, txtTime.getText().toString());
+                        contentValues.put(Contract.TODO_ACCESSED, currentEpoch);
                         db.update(Contract.TODO_TABLE_NAME, contentValues, Contract.TODO_ID + "=?", null);
                         listItem.setTitle(inputTitle.getText().toString());
                         listItem.setContent(inputContent.getText().toString());
                         listItem.setDate(txtDate.getText().toString());
                         listItem.setTime(txtTime.getText().toString());
+                        listItem.setAccessed(currentEpoch);
                         adapter.notifyDataSetChanged();
-                        // Toast.makeText(MainActivity.this, "Add pressed", Toast.LENGTH_SHORT).show();
                     }
                 });
 
-                builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        // Toast.makeText(MainActivity.this, "CANCEL pressed", Toast.LENGTH_SHORT).show();
-                    }
-                });
-
+                builder.setNegativeButton("CANCEL", null);
                 builder.show();
                 return true;
             }
         });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
     }
 
     @Override
@@ -207,23 +241,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            // TODO implement share feature
-//            case R.id.share:
-//                Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
-//                break;
+            case R.id.menu_sort_items_title:
+                Collections.sort(todos, new Comparator<ListItem>() {
+                    @Override
+                    public int compare(ListItem listItem, ListItem t1) {
+                        return listItem.getTitle().toLowerCase().compareTo(t1.getTitle().toLowerCase());
+                    }
+                });
+                adapter.notifyDataSetChanged();
+                break;
+            case R.id.menu_sort_items_created:
+                Collections.sort(todos, new Comparator<ListItem>() {
+                    @Override
+                    public int compare(ListItem listItem, ListItem t1) {
+                        return ((t1.getCreated() - listItem.getCreated()) > 0 ? 1 : -1);
+                    }
+                });
+                adapter.notifyDataSetChanged();
+                break;
+            case R.id.menu_sort_items_accessed:
+                Collections.sort(todos, new Comparator<ListItem>() {
+                    @Override
+                    public int compare(ListItem listItem, ListItem t1) {
+                        return ((t1.getAccessed() - listItem.getAccessed()) > 0 ? 1 : -1);
+                    }
+                });
+                adapter.notifyDataSetChanged();
+                break;
+            case R.id.menu_about:
+                // TODO
+                break;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
-    private long convertToEpoch(String date, String time) throws ParseException {
-        // TODO handle case when date is empty string or time is empty string
-        time = time + ":00.000";
+    private long convertToEpoch(String date, String time) throws ParseException, RuntimeException {
         Log.i("date", date + " " + time);
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS");
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        Date value = sdf.parse(date + " " + time);
-        long epoch = value.getTime();
-        return epoch;
+        String[] splitDate = date.split("-");
+        String[] splitTime = time.split(":");
+        Calendar cal = Calendar.getInstance();
+        cal.set(Integer.parseInt(splitDate[2]), Integer.parseInt(splitDate[1]), Integer.parseInt(splitDate[0]), Integer.parseInt(splitTime[1]), Integer.parseInt(splitTime[0]), 0);
+        return cal.getTimeInMillis();
     }
 
     @Override
@@ -273,38 +332,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         contentValues.put(Contract.TODO_CONTENT, inputContent.getText().toString());
                         contentValues.put(Contract.TODO_DATE, txtDate.getText().toString());
                         contentValues.put(Contract.TODO_TIME, txtTime.getText().toString());
+                        long currentEpoch = Calendar.getInstance().getTimeInMillis();
+                        contentValues.put(Contract.TODO_ACCESSED, currentEpoch);
+                        contentValues.put(Contract.TODO_CREATED, currentEpoch);
                         long id = db.insert(Contract.TODO_TABLE_NAME, null, contentValues);
+                        Log.i("Add Todo epoch", String.valueOf(currentEpoch));
 
-                        ListItem listItem = new ListItem(inputTitle.getText().toString(), inputContent.getText().toString(), id, txtDate.getText().toString(), txtTime.getText().toString());
+                        final ListItem listItem = new ListItem(inputTitle.getText().toString(), inputContent.getText().toString(), id, txtDate.getText().toString(), txtTime.getText().toString(), currentEpoch, currentEpoch);
                         todos.add(listItem);
-                        Log.i("TAG", "onClick: " + todos.size());
                         adapter.notifyDataSetChanged();
-
                         long notifyTime = System.currentTimeMillis();
                         Log.i("start", String.valueOf(notifyTime));
                         try {
                             notifyTime = convertToEpoch(txtDate.getText().toString(), txtTime.getText().toString());
-                            Log.i("end", String.valueOf(notifyTime));
-                        } catch (ParseException e) {
+
+                            AlarmManager alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                            Intent intent = new Intent(MainActivity.this, AlarmReceiver.class);
+                            intent.putExtra("title", listItem.getTitle());
+                            intent.putExtra("content", listItem.getContent());
+
+                            PendingIntent alarmIntent = PendingIntent.getBroadcast(MainActivity.this, (int) listItem.getId(), intent, PendingIntent.FLAG_ONE_SHOT);
+                            // TODO implement alarmMgr.cancel()
+                            alarmMgr.set(AlarmManager.RTC_WAKEUP, notifyTime, alarmIntent);
+
+                        } catch (ParseException | RuntimeException e) {
                             e.printStackTrace();
                         }
-
-                        AlarmManager alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                        Intent intent = new Intent(MainActivity.this, AlarmReceiver.class);
-                        intent.putExtra("title", inputTitle.getText().toString());
-                        intent.putExtra("content", inputContent.getText().toString());
-                        PendingIntent alarmIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, 0);
-                        alarmMgr.set(AlarmManager.RTC_WAKEUP, notifyTime, alarmIntent);
                     }
                 });
 
-                builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        // Toast.makeText(MainActivity.this, "CANCEL pressed", Toast.LENGTH_SHORT).show();
-                    }
-                });
-
+                builder.setNegativeButton("CANCEL", null);
                 builder.show();
                 break;
         }

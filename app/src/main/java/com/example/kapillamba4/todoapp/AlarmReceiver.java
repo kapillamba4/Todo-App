@@ -30,7 +30,6 @@ public class AlarmReceiver extends BroadcastReceiver {
         return id;
     }
 
-
     @Override
     public void onReceive(Context context, Intent intent) {
         title = intent.getStringExtra("title");
