@@ -11,9 +11,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Debug;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -28,9 +26,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.amitshekhar.DebugDB;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -53,7 +48,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         this.setTitle("TodoList");
-//        Log.i("address", DebugDB.getAddressLog().toString());
         listView = (ListView) findViewById(R.id.todo_list);
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(this);
