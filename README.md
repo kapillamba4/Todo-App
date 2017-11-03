@@ -2,8 +2,12 @@
 
 This android app project uses minimal amount of support design libraries and no external library
 ## App Icon:
+<img src="/screenshots/todo_icon.png"/>
+
 
 # Screenshots:
+<img src="/screenshots/screenshot1.png" height="500px"/> <img src="/screenshots/screenshot2.png"  height="500px"/> <img src="/screenshots/screenshot3.png"  height="500px"/><img src="/screenshots/screenshot4.png"  height="500px"/>
+
 
 # License:
 The MIT License (MIT)
