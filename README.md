@@ -6,7 +6,7 @@ This android app project uses minimal amount of support design libraries and no 
 
 
 # Screenshots:
-<img src="/screenshots/screenshot1.png" height="500px"/> <img src="/screenshots/screenshot2.png"  height="500px"/> <img src="/screenshots/screenshot3.png"  height="500px"/><img src="/screenshots/screenshot4.png"  height="500px"/>
+<img src="/screenshots/screenshot1.png" height="460px"/> <img src="/screenshots/screenshot2.png"  height="460px"/> <img src="/screenshots/screenshot3.png"  height="460px"/> <img src="/screenshots/screenshot4.png"  height="460px"/>
 
 
 # License:
