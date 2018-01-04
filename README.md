@@ -1,4 +1,4 @@
-# TodoApp [![License](http://img.shields.io/badge/license-MIT-green.svg?style=flat)]() [![Build Status](https://travis-ci.com/kapillamba4/TodoApp.svg?token=yYsQueBytN9ZixGZais6&branch=master)](https://travis-ci.com/kapillamba4/TodoApp)
+# TodoApp [![License](http://img.shields.io/badge/license-MIT-green.svg?style=flat)]() [![Build Status](https://travis-ci.com/kapillamba4/TodoApp.svg?token=yYsQueBytN9ZixGZais6&branch=master)](https://travis-ci.com/kapillamba4/TodoApp) [![Help Contribute to Open Source](https://www.codetriage.com/kapillamba4/todoapp/badges/users.svg)](https://www.codetriage.com/kapillamba4/todoapp)
 
 This android app project uses minimal amount of support design libraries and no external library
 ## App Icon:
