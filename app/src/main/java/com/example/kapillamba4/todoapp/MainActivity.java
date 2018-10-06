@@ -275,7 +275,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String[] splitDate = date.split("-");
         String[] splitTime = time.split(":");
         Calendar cal = Calendar.getInstance();
-        cal.set(Integer.parseInt(splitDate[2]), Integer.parseInt(splitDate[1]), Integer.parseInt(splitDate[0]), Integer.parseInt(splitTime[1]), Integer.parseInt(splitTime[0]), 0);
+        cal.set(Integer.parseInt(splitDate[2]), Integer.parseInt(splitDate[1])-1, Integer.parseInt(splitDate[0]), Integer.parseInt(splitTime[0]), Integer.parseInt(splitTime[1]), 0);
         return cal.getTimeInMillis();
     }
 
